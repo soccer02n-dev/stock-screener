@@ -15,37 +15,45 @@ export default function StockDetailPage({
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Clear previous widget
+    // Clear previous widget content
     containerRef.current.innerHTML = "";
 
+    // Create the TradingView widget container
+    const widgetContainer = document.createElement("div");
+    widgetContainer.className = "tradingview-widget-container";
+    widgetContainer.style.height = "100%";
+    widgetContainer.style.width = "100%";
+
+    const widgetInner = document.createElement("div");
+    widgetInner.className = "tradingview-widget-container__widget";
+    widgetInner.style.height = "calc(100% - 32px)";
+    widgetInner.style.width = "100%";
+    widgetContainer.appendChild(widgetInner);
+
+    // Create and configure the script
     const script = document.createElement("script");
-    script.src = "https://s.tradingview.com/tv.js";
+    script.type = "text/javascript";
+    script.src =
+      "https://s.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
     script.async = true;
-    script.onload = () => {
-      if (!containerRef.current) return;
-      new (window as unknown as { TradingView: { widget: new (config: Record<string, unknown>) => unknown } }).TradingView.widget({
-        symbol: decodedSymbol,
-        container_id: "tv-chart",
-        autosize: true,
-        interval: "D",
-        timezone: "Asia/Tokyo",
-        theme: "light",
-        style: "1",
-        locale: "ja",
-        toolbar_bg: "#f1f3f6",
-        enable_publishing: false,
-        hide_top_toolbar: false,
-        hide_legend: false,
-        save_image: false,
-        allow_symbol_change: false,
-      });
-    };
-    document.head.appendChild(script);
+    script.textContent = JSON.stringify({
+      autosize: true,
+      symbol: decodedSymbol,
+      interval: "D",
+      timezone: "Asia/Tokyo",
+      theme: "light",
+      style: "1",
+      locale: "ja",
+      allow_symbol_change: false,
+      support_host: "https://www.tradingview.com",
+    });
+
+    widgetContainer.appendChild(script);
+    containerRef.current.appendChild(widgetContainer);
 
     return () => {
-      // Cleanup script on unmount
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
+      if (containerRef.current) {
+        containerRef.current.innerHTML = "";
       }
     };
   }, [decodedSymbol]);
@@ -82,7 +90,6 @@ export default function StockDetailPage({
       {/* Chart */}
       <div
         ref={containerRef}
-        id="tv-chart"
         className="flex-1"
         style={{ minHeight: "calc(100vh - 57px)" }}
       />
