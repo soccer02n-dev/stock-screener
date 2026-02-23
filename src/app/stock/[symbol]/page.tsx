@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useEffect, useRef } from "react";
 import Link from "next/link";
 
 export default function StockDetailPage({
@@ -10,8 +10,45 @@ export default function StockDetailPage({
 }) {
   const { symbol } = use(params);
   const decodedSymbol = decodeURIComponent(symbol);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const widgetUrl = `https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(decodedSymbol)}&interval=D&theme=light&style=1&locale=ja&hide_side_toolbar=0&allow_symbol_change=0&save_image=0&hideideas=1&studies=[]&width=100%25&height=100%25`;
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    // Clear previous widget
+    containerRef.current.innerHTML = "";
+
+    const script = document.createElement("script");
+    script.src = "https://s.tradingview.com/tv.js";
+    script.async = true;
+    script.onload = () => {
+      if (!containerRef.current) return;
+      new (window as unknown as { TradingView: { widget: new (config: Record<string, unknown>) => unknown } }).TradingView.widget({
+        symbol: decodedSymbol,
+        container_id: "tv-chart",
+        autosize: true,
+        interval: "D",
+        timezone: "Asia/Tokyo",
+        theme: "light",
+        style: "1",
+        locale: "ja",
+        toolbar_bg: "#f1f3f6",
+        enable_publishing: false,
+        hide_top_toolbar: false,
+        hide_legend: false,
+        save_image: false,
+        allow_symbol_change: false,
+      });
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      // Cleanup script on unmount
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    };
+  }, [decodedSymbol]);
 
   return (
     <div className="flex min-h-screen flex-col bg-white dark:bg-zinc-950">
@@ -43,14 +80,12 @@ export default function StockDetailPage({
       </header>
 
       {/* Chart */}
-      <div className="flex-1">
-        <iframe
-          src={widgetUrl}
-          className="h-full w-full border-0"
-          style={{ minHeight: "calc(100vh - 57px)" }}
-          allowFullScreen
-        />
-      </div>
+      <div
+        ref={containerRef}
+        id="tv-chart"
+        className="flex-1"
+        style={{ minHeight: "calc(100vh - 57px)" }}
+      />
     </div>
   );
 }
