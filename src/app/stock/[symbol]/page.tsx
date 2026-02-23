@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useRef } from "react";
+import { use } from "react";
 import Link from "next/link";
 
 export default function StockDetailPage({
@@ -10,53 +10,8 @@ export default function StockDetailPage({
 }) {
   const { symbol } = use(params);
   const decodedSymbol = decodeURIComponent(symbol);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    // Clear previous widget content
-    containerRef.current.innerHTML = "";
-
-    // Create the TradingView widget container
-    const widgetContainer = document.createElement("div");
-    widgetContainer.className = "tradingview-widget-container";
-    widgetContainer.style.height = "100%";
-    widgetContainer.style.width = "100%";
-
-    const widgetInner = document.createElement("div");
-    widgetInner.className = "tradingview-widget-container__widget";
-    widgetInner.style.height = "calc(100% - 32px)";
-    widgetInner.style.width = "100%";
-    widgetContainer.appendChild(widgetInner);
-
-    // Create and configure the script
-    const script = document.createElement("script");
-    script.type = "text/javascript";
-    script.src =
-      "https://s.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
-    script.async = true;
-    script.textContent = JSON.stringify({
-      autosize: true,
-      symbol: decodedSymbol,
-      interval: "D",
-      timezone: "Asia/Tokyo",
-      theme: "light",
-      style: "1",
-      locale: "ja",
-      allow_symbol_change: false,
-      support_host: "https://www.tradingview.com",
-    });
-
-    widgetContainer.appendChild(script);
-    containerRef.current.appendChild(widgetContainer);
-
-    return () => {
-      if (containerRef.current) {
-        containerRef.current.innerHTML = "";
-      }
-    };
-  }, [decodedSymbol]);
+  const chartUrl = `https://www.tradingview.com/widgetembed/?frameElementId=tv_chart&symbol=${encodeURIComponent(decodedSymbol)}&interval=D&hidesidetoolbar=0&symboledit=0&saveimage=0&toolbarbg=f1f3f6&theme=light&style=1&timezone=Asia%2FTokyo&locale=ja&utm_source=localhost&utm_medium=widget_new&utm_campaign=chart`;
 
   return (
     <div className="flex min-h-screen flex-col bg-white dark:bg-zinc-950">
@@ -88,11 +43,17 @@ export default function StockDetailPage({
       </header>
 
       {/* Chart */}
-      <div
-        ref={containerRef}
-        className="flex-1"
-        style={{ minHeight: "calc(100vh - 57px)" }}
-      />
+      <div className="flex-1" style={{ minHeight: "calc(100vh - 57px)" }}>
+        <iframe
+          id="tv_chart"
+          src={chartUrl}
+          className="h-full w-full border-0"
+          style={{ minHeight: "calc(100vh - 57px)" }}
+          sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+          loading="lazy"
+          allowFullScreen
+        />
+      </div>
     </div>
   );
 }
