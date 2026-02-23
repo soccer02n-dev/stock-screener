@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { ScreenerResult } from "@/lib/types";
 
 function formatNumber(num: number): string {
@@ -30,7 +31,10 @@ export default function StockCard({ stock }: { stock: ScreenerResult }) {
       : "text-red-600 dark:text-red-400";
 
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900">
+    <Link
+      href={`/stock/${encodeURIComponent(stock.symbol)}`}
+      className="block rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+    >
       {/* Top row: rank + symbol + score */}
       <div className="mb-3 flex items-start justify-between">
         <div className="flex items-center gap-3">
@@ -98,7 +102,7 @@ export default function StockCard({ stock }: { stock: ScreenerResult }) {
           52W: ${stock.yearLow.toFixed(0)} - ${stock.yearHigh.toFixed(0)}
         </span>
       </div>
-    </div>
+    </Link>
   );
 }
 
